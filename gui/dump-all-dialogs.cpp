@@ -44,6 +44,7 @@
 #include "gui/massadd.h"
 #include "gui/options.h"
 #include "gui/widgets/tab.h"
+#include "gui/widgets/scrollcontainer.h"
 #include "gui/launcher.h"
 
 #include "image/png.h"
@@ -72,7 +73,8 @@ void handleSimpleDialog(GUI::Dialog &dialog, const Common::String &filename,Grap
 	dialog.close();
 }
 
-void loopThroughTabs(GUI::Dialog &dialog, const Common::String &lang, Graphics::Surface surf, const Common::String name) {
+void loopThroughTabs(GUI::Dialog &dialog, const Common::String &lang, Graphics::Surface surf, const Common::String name)
+ {
 	dialog.open();
 	GUI::Widget *widget = nullptr;
 	widget = dialog.findWidget((uint32)kTabWidget);
@@ -80,9 +82,35 @@ void loopThroughTabs(GUI::Dialog &dialog, const Common::String &lang, Graphics::
 	if (widget) {
 		TabWidget *tabWidget = (TabWidget *)widget;
 		for (int tabNo = 0; tabNo < tabWidget->getTabCount(); tabNo++) {
-			Common::String suffix = Common::String::format("-%d-%dx%d-%s.png", tabNo + 1, g_system->getOverlayWidth(), g_system->getOverlayHeight(), lang.c_str());
 			tabWidget->setActiveTab(tabNo);
-			handleSimpleDialog(dialog, name + suffix, surf);
+
+			widget = tabWidget->findWidgetInChain((uint32)kScrollContainerWidget);
+			Common::String suffix;
+
+			if (widget) {
+				ScrollContainerWidget *scrollWidget = (ScrollContainerWidget *)widget;
+
+				int oldMode = g_system->getGraphicsMode();
+				auto oldLimitH = scrollWidget->_limitH;
+
+				int virtualHeight = scrollWidget->_verticalScroll->_numEntries;
+				scrollWidget->_limitH = virtualHeight;
+				
+				Graphics::ManagedSurface managedSurf;
+				managedSurf.create(g_system->getOverlayWidth(), virtualHeight, g_system->getOverlayFormat());	
+				g_gui.theme()->setGraphicsMode(ThemeEngine::kGfxCapture, &managedSurf);
+
+
+				handleSimpleDialog(dialog, name + suffix, managedSurf);
+
+				// restore previous values
+				g_gui.theme()->setGraphicsMode((ThemeEngine::GraphicsMode)oldMode, nullptr);
+				scrollWidget->_limitH = oldLimitH;
+			} else {
+				suffix = Common::String::format("-%d-%dx%d-%s.png", tabNo + 1, g_system->getOverlayWidth(), g_system->getOverlayHeight(), lang.c_str());
+				handleSimpleDialog(dialog, name + suffix, surf);
+			}
+
 		}
 	}
 	dialog.close();
@@ -101,6 +129,8 @@ void dumpDialogs(const Common::String &message, const Common::String &lang) {
 
 	// Skipping Tooltips as not required
 
+
+#if 0
 	// MessageDialog
 	GUI::MessageDialog messageDialog(message);
 	handleSimpleDialog(messageDialog, "messageDialog" + suffix, surf);
@@ -142,6 +172,8 @@ void dumpDialogs(const Common::String &message, const Common::String &lang) {
 	GUI::BrowserDialog browserDialog(_("Select directory with game data"), true);
 	handleSimpleDialog(browserDialog, "browserDialog-" + suffix, surf);
 
+
+
 	// ChooserDialog
 	GUI::ChooserDialog chooserDialog(_("Pick the game:"));
 	handleSimpleDialog(chooserDialog, "chooserDialog-" + suffix, surf);
@@ -149,6 +181,8 @@ void dumpDialogs(const Common::String &message, const Common::String &lang) {
 	// MassAddDialog
 	GUI::MassAddDialog massAddDialog(Common::FSNode("."));
 	handleSimpleDialog(massAddDialog, "massAddDialog-" + suffix, surf);
+
+#endif
 
 	// GlobalOptionsDialog
 	LauncherSimple launcherDialog("Launcher");
@@ -174,10 +208,10 @@ void dumpAllDialogs(const Common::String &message) {
 	int original_window_height = ConfMan.getInt("last_window_height", Common::ConfigManager::kApplicationDomain);
 	Common::List<Common::String> list = Common::getLanguageList();
 	const int res[] = {320, 200,
-					   320, 240,
-					   640, 400,
-					   640, 480,
-					   800, 600,
+					//    320, 240,
+					//    640, 400,
+					//    640, 480,
+					//    800, 600,
 					   0};
 
 	// HACK: Pass info to backend to force window resize
@@ -200,10 +234,12 @@ void dumpAllDialogs(const Common::String &message) {
 		g_system->endGFXTransaction();
 
 		// Iterate through all langauges
-		for (Common::String &lang : list) {
+		// for (Common::String &lang : list) {
 
-			dumpDialogs(message, lang);
-		}
+		// 	dumpDialogs(message, lang);
+		// }
+
+		dumpDialogs(message, "en");
 
 	}
 

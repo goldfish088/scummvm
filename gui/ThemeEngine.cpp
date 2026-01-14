@@ -322,7 +322,7 @@ bool ThemeEngine::init() {
 	// reset everything and reload the graphics
 	_initOk = false;
 	_overlayFormat = _system->getOverlayFormat();
-	setGraphicsMode(_graphicsMode);
+	setGraphicsMode(_graphicsMode, nullptr);
 
 	if (_screen.getPixels() && _backBuffer.getPixels()) {
 		_initOk = true;
@@ -430,8 +430,18 @@ void ThemeEngine::disable() {
 	_enabled = false;
 }
 
-void ThemeEngine::setGraphicsMode(GraphicsMode mode) {
+void ThemeEngine::setGraphicsMode(GraphicsMode mode, Graphics::ManagedSurface *surface = nullptr) {
+	Graphics::ManagedSurface *activeSurface = &_screen;
+	uint32 width = _system->getOverlayWidth(), height = _system->getOverlayHeight();
+
 	switch (mode) {
+	case kGfxCapture:
+		scumm_assert(surface != nullptr);
+		activeSurface = surface;
+		width = activeSurface->w;
+		height = activeSurface->h;
+		// fall through
+
 	case kGfxStandard:
 #ifndef DISABLE_FANCY_THEMES
 	case kGfxAntialias:
@@ -451,18 +461,18 @@ void ThemeEngine::setGraphicsMode(GraphicsMode mode) {
 		error("Invalid graphics mode");
 	}
 
-	uint32 width = _system->getOverlayWidth();
-	uint32 height = _system->getOverlayHeight();
+	// uint32 width = _system->getOverlayWidth();
+	// uint32 height = _system->getOverlayHeight();
 
 	_backBuffer.free();
 	_backBuffer.create(width, height, _overlayFormat);
 
-	_screen.free();
-	_screen.create(width, height, _overlayFormat);
+	activeSurface->free();
+	activeSurface->create(width, height, _overlayFormat);
 
 	delete _vectorRenderer;
 	_vectorRenderer = Graphics::createRenderer(mode);
-	_vectorRenderer->setSurface(&_screen);
+	_vectorRenderer->setSurface(activeSurface);
 
 	// Since we reinitialized our screen surfaces we know nothing has been
 	// drawn so far. Sometimes we still end up with dirty screen bits in the

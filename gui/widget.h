@@ -116,6 +116,7 @@ public:
 	static Widget *findWidgetInChain(Widget *start, int x, int y);
 	static Widget *findWidgetInChain(Widget *start, const char *name);
 	static Widget *findWidgetInChain(Widget *w, uint32 type);
+	Widget *findWidgetInChain(uint32 type) { return findWidgetInChain(_firstWidget, type); }
 	static bool containsWidgetInChain(Widget *start, Widget *search);
 
 public:

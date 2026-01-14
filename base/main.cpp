@@ -701,9 +701,9 @@ extern "C" int scummvm_main(int argc, const char * const argv[]) {
 	CloudMan.syncSaves();
 #endif
 
-#if 0
+// #if 0
 	GUI::dumpAllDialogs();
-#endif
+// #endif
 
 // Print out CPU extension info
 // Separate block to keep the stack clean

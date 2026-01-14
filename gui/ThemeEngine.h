@@ -334,7 +334,8 @@ public:
 	enum GraphicsMode {
 		kGfxDisabled = 0,   ///< No GFX
 		kGfxStandard,  ///< Standard (aliased) renderer.
-		kGfxAntialias  ///< Optimized AA renderer.
+		kGfxAntialias,  ///< Optimized AA renderer.
+		kGfxCapture	///< Capture mode (used for screenshots, currently for translations)
 	};
 
 	/** Constant value to expand dirty rectangles, to make sure they are fully copied */
@@ -612,6 +613,12 @@ public:
 	 */
 	bool addTextData(const Common::String &drawDataId, TextData textId, TextColor id, Graphics::TextAlign alignH, TextAlignVertical alignV);
 
+	/**
+	 * Changes the active graphics mode of the GUI; may be used to either
+	 * initialize the GUI or to change the mode while the GUI is already running.
+	 */
+	void setGraphicsMode(GraphicsMode mode, Graphics::ManagedSurface *surface);
+
 protected:
 	/**
 	 * Returns if the Theme is ready to draw stuff on screen.
@@ -626,11 +633,6 @@ protected:
 	/** Load the them from the file with the specified name. */
 	void loadTheme(const Common::String &themeid);
 
-	/**
-	 * Changes the active graphics mode of the GUI; may be used to either
-	 * initialize the GUI or to change the mode while the GUI is already running.
-	 */
-	void setGraphicsMode(GraphicsMode mode);
 
 public:
 	inline ThemeEval *getEvaluator() { return _themeEval; }

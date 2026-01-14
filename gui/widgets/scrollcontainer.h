@@ -29,17 +29,17 @@
 namespace GUI {
 
 class ScrollContainerWidget: public Widget, public CommandSender {
-	ScrollBarWidget *_verticalScroll;
-	int16 _scrolledX, _scrolledY;
 	int _scrollbarWidth;
-	uint16 _limitH;
 	uint32 _reflowCmd;
 	ThemeEngine::WidgetBackground _backgroundType;
 	Common::String _dialogName;
 
-	void recalc();
 
 public:
+	uint16 _limitH;
+	int16 _scrolledX, _scrolledY;
+	void recalc();
+	ScrollBarWidget *_verticalScroll;
 	ScrollContainerWidget(GuiObject *boss, int x, int y, int w, int h, uint32 reflowCmd = 0);
 	ScrollContainerWidget(GuiObject *boss, const Common::String &name, const Common::String &dialogName, uint32 reflowCmd = 0);
 	~ScrollContainerWidget() override;
