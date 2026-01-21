@@ -202,8 +202,7 @@ static const char HELP_STRING4[] =
 	"  --render-mode=MODE       Enable additional render modes (hercGreen, hercAmber,\n"
 	"                           cga, ega, vga, amiga, fmtowns, pc98-256c, pc98-16c, pc98-8c, 2gs,\n"
 	"                           atari, macintosh, macintoshbw, vgaGray)\n"
-	"  --snapshot-mode          Enable snapshot mode to dump all GUI dialogs to images\n"
-	"                           and then exit ScummVM\n"
+	"  --dump-all-screenshots   Dump screenshots of all GUI dialogs\n"
 #ifdef ENABLE_EVENTRECORDER
 	"  --record-mode=MODE       Specify record mode for event recorder (record, playback,\n"
 	"                           fast_playback, info, update, passthrough [default])\n"
@@ -934,7 +933,7 @@ Common::String parseCommandLine(Common::StringMap &settings, int argc, const cha
 					usage("Unrecognized render mode '%s'", option);
 			END_OPTION
 
-			DO_LONG_OPTION_BOOL("snapshot-mode")
+			DO_LONG_OPTION_BOOL("dump-all-screenshots")
 			END_OPTION
 
 			DO_LONG_OPTION_BOOL("dirtyrects")
