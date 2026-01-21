@@ -701,9 +701,9 @@ extern "C" int scummvm_main(int argc, const char * const argv[]) {
 	CloudMan.syncSaves();
 #endif
 
-#ifdef SNAPSHOT_MODE
-	GUI::dumpAllDialogs();
-#endif
+	if (ConfMan.getBool("snapshot_mode")) {
+		GUI::dumpAllDialogs();
+	}
 
 // Print out CPU extension info
 // Separate block to keep the stack clean

@@ -375,11 +375,11 @@ void ThemeEngine::clearAll() {
 	if (_initOk) {
 		_system->clearOverlay();
 	
-	// HACK: In snapshot mode we don't render to a screen,
-	// just a surface
-#ifndef SNAPSHOT_MODE
-		_system->grabOverlay(*_backBuffer.surfacePtr());
-#endif
+		// HACK: In snapshot mode we don't render to a screen,
+		// just a surface
+		if (!ConfMan.getBool("snapshot_mode")) {
+			_system->grabOverlay(*_backBuffer.surfacePtr());
+		}
 	}
 }
 
