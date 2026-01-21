@@ -213,6 +213,7 @@ _enable_prof=no
 _enable_asan=no
 _enable_tsan=no
 _enable_ubsan=no
+_snapshot_mode=no
 _bink=yes
 _cloud=auto
 _dlc=no
@@ -1037,6 +1038,8 @@ Optional Features:
   --enable-tts             build support for text to speech
   --disable-tts            don't build support for text to speech
   --disable-bink           don't build with Bink video support
+  --snapshot-mode          enable snapshot mode to see translations
+                           at various resolutions
   --opengl-mode=MODE       OpenGL (ES) mode to use for OpenGL output [auto]
                            available modes: auto for autodetection
                                             none for disabling any OpenGL usage
@@ -1380,6 +1383,7 @@ for ac_option in $@; do
 	--disable-bink)               _bink=no               ;;
 	--enable-discord)             _discord=yes           ;;
 	--disable-discord)            _discord=no            ;;
+	--snapshot-mode)              _snapshot=yes          ;;
 	--enable-verbose-build)      _verbose_build=yes      ;;
 	--enable-cygwin-build)       _cygwin_build=yes       ;;
 	--enable-plugins)            _dynamic_modules=yes    ;;
@@ -7367,6 +7371,11 @@ case $_host in
 		append_var DEFINES "-DPLUGIN_DIRECTORY=\\\"$libdir/scummvm\\\""
 		;;
 esac
+
+# Set snapshot mode
+echo_n "Enabling Snapshot mode... "
+define_in_config_if_yes $_snapshot 'SNAPSHOT_MODE'
+echo "$_snapshot"
 
 #
 # Set variables for profiling.

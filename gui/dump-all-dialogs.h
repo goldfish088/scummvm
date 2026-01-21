@@ -23,15 +23,15 @@
 #define GUI_DUMP_ALL_DIALOGS_H
 
 #include "common/str.h"
-#include "graphics/surface.h"
+#include "graphics/managed_surface.h"
 #include "gui/dialog.h"
 
 namespace GUI {
 
-void saveGUISnapshot(Graphics::Surface surf, const Common::String &filename);
-void dumpDialogs(const Common::String &message, const Common::String &lang);
+void saveGUISnapshot(const Graphics::ManagedSurface &surf, const Common::String &filename);
+void dumpDialogs(const Common::String &lang, const Common::String &message, int width, int height);
 void dumpAllDialogs(const Common::String &message = "test");
-void loopThroughTabs(GUI::Dialog &dialog, const Common::String &lang, Graphics::Surface surf, const Common::String name);
+void loopThroughTabs(GUI::Dialog &dialog, const Common::String &lang, const Graphics::ManagedSurface &surf, const Common::String &name);
 
 } // End of namespace GUI
 

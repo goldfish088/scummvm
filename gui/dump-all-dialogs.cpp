@@ -50,7 +50,7 @@
 
 namespace GUI {
 
-void saveGUISnapshot(Graphics::Surface surf, const Common::String &filename) {
+void saveGUISnapshot(const Graphics::ManagedSurface &surf, const Common::String &filename) {
 	Common::DumpFile outFile;
 	Common::String outName = Common::String::format("snapshots/%s", filename.c_str());
 
@@ -63,16 +63,15 @@ void saveGUISnapshot(Graphics::Surface surf, const Common::String &filename) {
 	}
 }
 
-void handleSimpleDialog(GUI::Dialog &dialog, const Common::String &filename,Graphics::Surface surf) {
+void handleSimpleDialog(GUI::Dialog &dialog, const Common::String &filename, const Graphics::ManagedSurface &surf) {
 	dialog.open();         // For rendering
 	dialog.reflowLayout(); // For updating surface
 	g_gui.redrawFull();
-	g_system->grabOverlay(surf);
 	saveGUISnapshot(surf, filename);
 	dialog.close();
 }
 
-void loopThroughTabs(GUI::Dialog &dialog, const Common::String &lang, Graphics::Surface surf, const Common::String name) {
+void loopThroughTabs(GUI::Dialog &dialog, const Common::String &lang, const Graphics::ManagedSurface &surf, const Common::String &name) {
 	dialog.open();
 	GUI::Widget *widget = nullptr;
 	widget = dialog.findWidget((uint32)kTabWidget);
@@ -88,16 +87,15 @@ void loopThroughTabs(GUI::Dialog &dialog, const Common::String &lang, Graphics::
 	dialog.close();
 }
 
-void dumpDialogs(const Common::String &message, const Common::String &lang) {
+void dumpDialogs(const Common::String &lang, const Common::String &message, int width, int height) {
 #ifdef USE_TRANSLATION
 	// Update GUI language
 	TransMan.setLanguage(lang);
 #endif
 
-	Graphics::Surface surf;
-	surf.create(g_system->getOverlayWidth(), g_system->getOverlayHeight(), g_system->getOverlayFormat());
+	Graphics::ManagedSurface &surf = g_gui.theme()->getScreenSurface();
 
-	Common::String suffix = Common::String::format("-%dx%d-%s.png", g_system->getOverlayWidth(), g_system->getOverlayHeight(), lang.c_str());
+	Common::String suffix = Common::String::format("-%dx%d-%s.png", width, height, lang.c_str());
 
 	// Skipping Tooltips as not required
 
@@ -160,67 +158,37 @@ void dumpDialogs(const Common::String &message, const Common::String &lang) {
 	GUI::LauncherChooser chooser;
 	chooser.selectLauncher();
 	chooser.open();
-	g_system->grabOverlay(surf);
 	saveGUISnapshot(surf, "launcher-" + filename);
 	chooser.close();
 #endif
 }
 
 void dumpAllDialogs(const Common::String &message) {
-#ifdef USE_TRANSLATION
-	auto originalLang = TransMan.getCurrentLanguage();
-#endif
-	int original_window_width = ConfMan.getInt("last_window_width", Common::ConfigManager::kApplicationDomain);
-	int original_window_height = ConfMan.getInt("last_window_height", Common::ConfigManager::kApplicationDomain);
 	Common::List<Common::String> list = Common::getLanguageList();
-	const int res[] = {320, 200,
-					   320, 240,
-					   640, 400,
-					   640, 480,
-					   800, 600,
-					   0};
+	// Common::List<Common::String> list;
+	// list.push_back("en");
+	Common::Pair<int, int> resolutions[] {
+		{320, 200},
+		{320, 240},
+		{640, 400},
+		{640, 480},
+		{800, 600},
+	};
 
-	// HACK: Pass info to backend to force window resize
-	ConfMan.setBool("force_resize", true, Common::ConfigManager::kApplicationDomain);
 	Common::FSNode dumpDir("snapshots");
 
 	if (!dumpDir.isDirectory())
 		dumpDir.createDirectory();
 
-	// Iterate through all resolutions available
-	for (const int *r = res; *r; r += 2) {
-		int w = r[0];
-		int h = r[1];
+	Graphics::PixelFormat pixelFormat = g_system->getOverlayFormat();
 
-		// Update resolution
-		ConfMan.setInt("last_window_width" , w, Common::ConfigManager::kApplicationDomain);
-		ConfMan.setInt("last_window_height", h, Common::ConfigManager::kApplicationDomain);
-		g_system->beginGFXTransaction();
-			g_system->initSize(w, h);
-		g_system->endGFXTransaction();
-
-		// Iterate through all langauges
-		for (Common::String &lang : list) {
-
-			dumpDialogs(message, lang);
-		}
-
+	for (const auto &res : resolutions) {
+		int w = res.first, h = res.second;
+		g_gui.theme()->updateSurfaceDimensions(w, h, pixelFormat);
+		for (const auto &lang : list) dumpDialogs(message, lang, w, h);
 	}
 
-#ifdef USE_TRANSLATION
-	TransMan.setLanguage(originalLang);
-#endif
-	ConfMan.setInt("last_window_width", original_window_width, Common::ConfigManager::kApplicationDomain);
-	ConfMan.setInt("last_window_height", original_window_height, Common::ConfigManager::kApplicationDomain);
-
-	g_system->beginGFXTransaction();
-		g_system->initSize(original_window_width, original_window_height);
-	g_system->endGFXTransaction();
-
-	// Clean up the temporary flag.
-	// Since we are still within the same method where we added,
-	// there is no need to flush config to the disk
-	ConfMan.removeKey("force_resize", Common::ConfigManager::kApplicationDomain);
+	g_system->quit();
 }
 
 } // End of namespace GUI
