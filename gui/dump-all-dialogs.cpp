@@ -167,13 +167,12 @@ void dumpAllDialogs(const Common::String &message) {
 	Common::List<Common::String> list = Common::getLanguageList();
 	// Common::List<Common::String> list;
 	// list.push_back("en");
-	Common::Pair<int, int> resolutions[] {
-		{320, 200},
-		{320, 240},
-		{640, 400},
-		{640, 480},
-		{800, 600},
-	};
+	const int res[] = {320, 200,
+					   320, 240,
+					   640, 400,
+					   640, 480,
+					   800, 600,
+					   0};
 
 	Common::FSNode dumpDir("snapshots");
 
@@ -182,8 +181,9 @@ void dumpAllDialogs(const Common::String &message) {
 
 	Graphics::PixelFormat pixelFormat = g_system->getOverlayFormat();
 
-	for (const auto &res : resolutions) {
-		int w = res.first, h = res.second;
+	for (const int *r = res; *r; r += 2) {
+		int w = r[0];
+		int h = r[1];
 		g_gui.theme()->updateSurfaceDimensions(w, h, pixelFormat);
 		for (const auto &lang : list) dumpDialogs(message, lang, w, h);
 	}
