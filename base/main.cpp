@@ -701,7 +701,7 @@ extern "C" int scummvm_main(int argc, const char * const argv[]) {
 	CloudMan.syncSaves();
 #endif
 
-	if (ConfMan.getBool("snapshot_mode")) {
+	if (ConfMan.getBool("dump_all_screenshots")) {
 		GUI::dumpAllDialogs();
 	}
 

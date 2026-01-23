@@ -461,8 +461,8 @@ public:
 	/**
 	 * Access and update the interal surface(s) for snapshot mode
 	 */
-	Graphics::ManagedSurface &getScreenSurface() { return _screen; }
-	void updateSurfaceDimensions(int w, int h, Graphics::PixelFormat &pixelFormat);
+	const Graphics::ManagedSurface &getScreenSurface() { return _screen; }
+	void updateSurfaceDimensions(int w, int h, const Graphics::PixelFormat &pixelFormat);
 
 	/** @name WIDGET DRAWING METHODS */
 	//@{

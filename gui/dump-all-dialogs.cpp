@@ -44,6 +44,7 @@
 #include "gui/massadd.h"
 #include "gui/options.h"
 #include "gui/widgets/tab.h"
+#include "gui/widgets/scrollcontainer.h"
 #include "gui/launcher.h"
 
 #include "image/png.h"
@@ -63,15 +64,15 @@ void saveGUISnapshot(const Graphics::ManagedSurface &surf, const Common::String 
 	}
 }
 
-void handleSimpleDialog(GUI::Dialog &dialog, const Common::String &filename, const Graphics::ManagedSurface &surf) {
-	dialog.open();         // For rendering
+void handleSimpleDialog(GUI::Dialog &dialog, const Common::String &filename, bool open = false) {
+	if (!open) dialog.open();         // For rendering
 	dialog.reflowLayout(); // For updating surface
 	g_gui.redrawFull();
-	saveGUISnapshot(surf, filename);
-	dialog.close();
+	saveGUISnapshot(g_gui.theme()->getScreenSurface(), filename);
+	if (!open) dialog.close();
 }
 
-void loopThroughTabs(GUI::Dialog &dialog, const Common::String &lang, const Graphics::ManagedSurface &surf, const Common::String &name) {
+void loopThroughTabs(GUI::Dialog &dialog, int w, int h, const Graphics::PixelFormat &pixelFormat, const Common::String &lang, const Common::String &name) {
 	dialog.open();
 	GUI::Widget *widget = nullptr;
 	widget = dialog.findWidget((uint32)kTabWidget);
@@ -81,19 +82,19 @@ void loopThroughTabs(GUI::Dialog &dialog, const Common::String &lang, const Grap
 		for (int tabNo = 0; tabNo < tabWidget->getTabCount(); tabNo++) {
 			Common::String suffix = Common::String::format("-%d-%dx%d-%s.png", tabNo + 1, g_system->getOverlayWidth(), g_system->getOverlayHeight(), lang.c_str());
 			tabWidget->setActiveTab(tabNo);
-			handleSimpleDialog(dialog, name + suffix, surf);
+			handleSimpleDialog(dialog, name + suffix);
 		}
 	}
 	dialog.close();
 }
 
-void dumpDialogs(const Common::String &lang, const Common::String &message, int width, int height) {
+void dumpDialogs(const Common::String &lang, const Common::String &message, int width, int height, const Graphics::PixelFormat &pixelFormat) {
 #ifdef USE_TRANSLATION
 	// Update GUI language
 	TransMan.setLanguage(lang);
 #endif
 
-	Graphics::ManagedSurface &surf = g_gui.theme()->getScreenSurface();
+	const Graphics::ManagedSurface &surf = g_gui.theme()->getScreenSurface();
 
 	Common::String suffix = Common::String::format("-%dx%d-%s.png", width, height, lang.c_str());
 
@@ -101,64 +102,64 @@ void dumpDialogs(const Common::String &lang, const Common::String &message, int 
 
 	// MessageDialog
 	GUI::MessageDialog messageDialog(message);
-	handleSimpleDialog(messageDialog, "messageDialog" + suffix, surf);
+	handleSimpleDialog(messageDialog, "messageDialog" + suffix);
 	// AboutDialog
 	GUI::AboutDialog aboutDialog;
-	handleSimpleDialog(aboutDialog, "aboutDialog" + suffix, surf);
+	handleSimpleDialog(aboutDialog, "aboutDialog" + suffix);
 
 #ifdef USE_CLOUD
 	// CloudConnectingWizard
 	GUI::CloudConnectionWizard cloudConnectingWizard;
-	handleSimpleDialog(cloudConnectingWizard, "cloudConnectingWizard" + suffix, surf);
+	handleSimpleDialog(cloudConnectingWizard, "cloudConnectingWizard" + suffix);
 
 	// RemoteBrowserDialog
 	GUI::RemoteBrowserDialog remoteBrowserDialog(_("Select directory with game data"));
-	handleSimpleDialog(remoteBrowserDialog, "remoteBrowserDialog" + suffix, surf);
+	handleSimpleDialog(remoteBrowserDialog, "remoteBrowserDialog" + suffix);
 #endif
 
 #ifdef USE_HTTP
 	// DownloadIconPacksDialog
 	GUI::DownloadPacksDialog downloadIconPacksDialog(_("icon packs"), "LIST", "gui-icons*.dat");
-	handleSimpleDialog(downloadIconPacksDialog, "downloadIconPacksDialog" + suffix, surf);
+	handleSimpleDialog(downloadIconPacksDialog, "downloadIconPacksDialog" + suffix);
 
 	// DownloadShaderPacksDialog
 	GUI::DownloadPacksDialog downloadShaderPacksDialog(_("shader packs"), "LIST-SHADERS", "shaders*.dat");
-	handleSimpleDialog(downloadShaderPacksDialog, "downloadShaderPacksDialog" + suffix, surf);
+	handleSimpleDialog(downloadShaderPacksDialog, "downloadShaderPacksDialog" + suffix);
 #endif
 
 #ifdef USE_FLUIDSYNTH
 	// FluidSynthSettingsDialog
 	GUI::FluidSynthSettingsDialog fluidSynthSettingsDialog;
-	handleSimpleDialog(fluidSynthSettingsDialog, "fluidSynthSettings-" + suffix, surf);
+	handleSimpleDialog(fluidSynthSettingsDialog, "fluidSynthSettings-" + suffix);
 #endif
 
 	// ThemeBrowserDialog
 	GUI::ThemeBrowser themeBrowser;
-	handleSimpleDialog(themeBrowser, "themeBrowser-" + suffix, surf);
+	handleSimpleDialog(themeBrowser, "themeBrowser-" + suffix);
 
 	// BrowserDialog
 	GUI::BrowserDialog browserDialog(_("Select directory with game data"), true);
-	handleSimpleDialog(browserDialog, "browserDialog-" + suffix, surf);
+	handleSimpleDialog(browserDialog, "browserDialog-" + suffix);
 
 	// ChooserDialog
 	GUI::ChooserDialog chooserDialog(_("Pick the game:"));
-	handleSimpleDialog(chooserDialog, "chooserDialog-" + suffix, surf);
+	handleSimpleDialog(chooserDialog, "chooserDialog-" + suffix);
 
 	// MassAddDialog
 	GUI::MassAddDialog massAddDialog(Common::FSNode("."));
-	handleSimpleDialog(massAddDialog, "massAddDialog-" + suffix, surf);
+	handleSimpleDialog(massAddDialog, "massAddDialog-" + suffix);
 
 	// GlobalOptionsDialog
 	LauncherSimple launcherDialog("Launcher");
 	GUI::GlobalOptionsDialog globalOptionsDialog(&launcherDialog);
-	loopThroughTabs(globalOptionsDialog, lang, surf, "GlobalOptionDialog");
+	loopThroughTabs(globalOptionsDialog, width, height, pixelFormat, lang, "GlobalOptionDialog");
 
 	// LauncherDialog
 #if 0
 	GUI::LauncherChooser chooser;
 	chooser.selectLauncher();
 	chooser.open();
-	saveGUISnapshot(surf, "launcher-" + filename);
+	saveGUISnapshot(g_gui.theme()->getScreenSurface(), "launcher-" + filename);
 	chooser.close();
 #endif
 }
@@ -185,7 +186,7 @@ void dumpAllDialogs(const Common::String &message) {
 		int w = r[0];
 		int h = r[1];
 		g_gui.theme()->updateSurfaceDimensions(w, h, pixelFormat);
-		for (const auto &lang : list) dumpDialogs(message, lang, w, h);
+		for (const auto &lang : list) dumpDialogs(message, lang, w, h, pixelFormat);
 	}
 
 	g_system->quit();
